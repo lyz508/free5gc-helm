@@ -38,7 +38,7 @@ data:
         cert:
           key: ../cert/nrf.key
           pem: ../cert/nrf.pem
-
+        oauth: true
       {{- .configuration.configuration | nindent 6 }}
 
     logger:
