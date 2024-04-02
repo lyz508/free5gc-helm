@@ -1,0 +1,269 @@
+NAME: free5gc-webui
+LAST DEPLOYED: Tue Apr  2 15:48:13 2024
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+HOOKS:
+---
+# Source: free5gc-webui/templates/tests/test-connection.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "free5gc-webui-test-connection"
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.5
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['webui-service:5000']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: free5gc-webui/templates/webui-configmap.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI, Ian Chen
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webui-configmap
+  labels:
+    app: free5gc
+data:
+  webuicfg.yaml: |
+    info:
+      version: 1.0.1
+      description: WEBUI initial local configuration
+
+    configuration:
+      mongodb:
+        name: free5gc
+        url: mongodb://mongodb:27017
+        
+    logger:
+      enable: true
+      level: info
+      reportCaller: false
+---
+# Source: free5gc-webui/templates/webui-service.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui-service
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.5
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: webui
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30500
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    project: free5gc
+    nf: webui
+---
+# Source: free5gc-webui/templates/webui-deployment.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-webui-webui
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.5
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-webui
+      app.kubernetes.io/instance: free5gc-webui
+      project: free5gc
+      nf: webui
+  template:
+    metadata:
+      annotations:
+        
+        checksum/config: dca9ce1ce322857c13ff22eb20730f2486447fea355551590f1805fa2d3774e3    
+      labels:
+        app.kubernetes.io/name: free5gc-webui
+        app.kubernetes.io/instance: free5gc-webui
+        project: free5gc
+        nf: webui
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-mongo
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: mongodb:27017
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: webui
+        image: towards5gs/free5gc-webui:latest
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        ports:
+        - containerPort: 5000
+        command: ["./webconsole"]
+        args: ["-c", "../config/webuicfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: webui-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        readinessProbe:
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          timeoutSeconds: 1
+          failureThreshold:  40
+          successThreshold: 1
+          httpGet:
+            scheme: HTTP
+            port: 5000
+        livenessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+          httpGet:
+            scheme: HTTP
+            port: 5000
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: webui-volume
+        projected:
+          sources:
+          - configMap:
+              name: webui-configmap
+---
+# Source: free5gc-webui/templates/webui-hpa.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+---
+# Source: free5gc-webui/templates/webui-ingress.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+
+NOTES:
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services webui-service)
+  export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT

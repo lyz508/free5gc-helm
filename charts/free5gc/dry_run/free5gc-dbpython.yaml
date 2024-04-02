@@ -1,0 +1,109 @@
+NAME: free5gc-dbpython
+LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: free5gc-dbpython/templates/dbpython-deployment.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-dbpython-dbpython
+  labels:
+    helm.sh/chart: free5gc-dbpython-0.1.0
+    app.kubernetes.io/name: free5gc-dbpython
+    app.kubernetes.io/instance: free5gc-dbpython
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: dbpython
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-dbpython
+      app.kubernetes.io/instance: free5gc-dbpython
+      project: free5gc
+      nf: dbpython
+  template:
+    metadata:
+      annotations:
+        
+      labels:
+        app.kubernetes.io/name: free5gc-dbpython
+        app.kubernetes.io/instance: free5gc-dbpython
+        project: free5gc
+        nf: dbpython
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-mongo
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: mongodb:27017
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: dbpython
+        image: towards5gs/free5gc-dbpython:latest
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        command: ["sleep"]
+        args: ["infinity"]
+        #command: ["node"]
+        #args: ["server/index.js"]
+        env:
+          - name: DB_URI
+            value: mongodb://mongodb:27017
+        resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+NOTES:
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+1. Get the Pod name running these commands:
+  export DB_PYTHON_POD_NAME=$(kubectl get po --namespace default -o name -l nf=dbpython)
+2. Show the manual:
+  kubectl --namespace default exec -it ${DB_PYTHON_POD_NAME} -- python3 add_subscribers.py -h

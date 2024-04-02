@@ -1,0 +1,384 @@
+NAME: free5gc-n3iwf
+LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: free5gc-n3iwf/templates/n3iwf-configmap.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI, Ian Chen
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n3iwf-configmap
+  labels:
+    app: free5gc
+data:
+  n3iwfcfg.yaml: |
+    info:
+      version: 1.0.5
+      description: N3IWF initial local configuration
+
+    configuration:
+      AMFSCTPAddresses:
+        - IP:
+          - 10.100.50.249
+          Port: 38412
+
+      # Bind Interfaces
+      # IKE interface
+      IKEBindAddress: 172.16.10.5 
+      # contrarly to the example used in docker compose here we attribute a special interface for the IKE daemon (as specified in the free5gc main project in github)
+
+      # GTP interface
+      GTPBindAddress: 10.100.50.237
+      N3IWFInformation:
+        GlobalN3IWFID:
+          PLMNID:
+            MCC: 208
+            MNC: 93
+          N3IWFID: 135
+        Name:
+          free5GC_N3IWF
+        SupportedTAList:
+          - TAC: 000001
+            BroadcastPLMNList:
+              - PLMNID:
+                  MCC: 208
+                  MNC: 93
+                TAISliceSupportList:
+                  - SNSSAI:
+                      SST: 1
+                      SD: 010203
+                  - SNSSAI:
+                      SST: 1
+                      SD: 112233
+      
+      # IPSec virtual interface
+      IPSecInterfaceAddress: 10.0.0.1
+      
+      # IPSec virtual interface mark
+      IPSecInterfaceMark: 5
+      
+      # NAS TCP Listen Port
+      NASTCPPort: 20000
+      
+      # N3IWF FQDN
+      FQDN: n3iwf.free5gc.org
+      
+      # Security
+      # Private Key File Path
+      PrivateKey: ../cert/n3iwf.key
+      # Certificate Authority (CA)
+      CertificateAuthority: ../cert/n3iwf.pem
+      # Certificate
+      Certificate: ../cert/n3iwf.pem
+      
+      # IP address that will be allocated to UE in IPSec tunnel
+      UEIPAddressRange: 10.0.0.0/24
+
+    logger:
+      enable: true
+      level: info
+      reportCaller: false
+
+  
+  n3iwf-ipsec.sh: |
+    #!/bin/sh
+    
+    ### N3iwf IPSec tunnel configuration
+    
+    ip l add name ipsec0 type vti local 172.16.10.5 remote 0.0.0.0 key 5
+    ip a add 10.0.0.1/24 dev ipsec0
+    ip l set dev ipsec0 up
+---
+# Source: free5gc-n3iwf/templates/n3iwf-deployment.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-n3iwf-n3iwf
+  labels:
+    helm.sh/chart: free5gc-n3iwf-0.2.5
+    app.kubernetes.io/name: free5gc-n3iwf
+    app.kubernetes.io/instance: free5gc-n3iwf
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: n3iwf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-n3iwf
+      app.kubernetes.io/instance: free5gc-n3iwf
+      project: free5gc
+      nf: n3iwf
+  template:
+    metadata:
+      annotations:
+        
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "n2network-n3iwf",
+              "interface": "n2",
+              "ips": [ "10.100.50.251/29" ],
+              "gateway": [ "10.100.50.254" ]
+            },
+            { "name": "n3network-n3iwf",
+              "interface": "n3",
+              "ips": [ "10.100.50.237/29" ],
+              "gateway": [ "10.100.50.238" ]
+            },
+
+            { "name": "ikenetwork-n3iwf",
+              "interface": "ike",
+              "ips": [ "172.16.10.5/24" ],
+              "gateway": [ "172.16.10.1" ]
+            }            
+            ]'
+        checksum/config: 2d4eb0b6027eddd40b6459daf98b3650b226b64fc106a90082db85ea42f31d15
+      labels:
+        app.kubernetes.io/name: free5gc-n3iwf
+        app.kubernetes.io/instance: free5gc-n3iwf
+        project: free5gc
+        nf: n3iwf
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      containers:
+      - name: n3iwf
+        image: towards5gs/free5gc-n3iwf:latest
+        imagePullPolicy: Always
+        securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+        command: ["sh", "-c", "../config/n3iwf-ipsec.sh && ./n3iwf -c ../config/n3iwfcfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: n3iwf-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: n3iwf-volume
+        projected:
+          sources:
+          - configMap:
+              name: n3iwf-configmap
+              items:
+              - key: n3iwfcfg.yaml
+                path: n3iwfcfg.yaml
+              - key: n3iwf-ipsec.sh
+                path: n3iwf-ipsec.sh
+                mode: 0777
+---
+# Source: free5gc-n3iwf/templates/amf-ngap-external.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at todo
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+---
+# Source: free5gc-n3iwf/templates/n3iwf-hpa.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+---
+# Source: free5gc-n3iwf/templates/n3iwf-ike-nad.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ikenetwork-n3iwf
+spec:
+
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "capabilities": { "ips": true },
+          "master": "eth0",
+          "mode": "bridge",
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "172.16.10.1"
+              }
+            ] 
+          }
+        }, {
+          "capabilities": { "mac": true },
+          "type": "tuning"
+        }
+      ]
+    }'
+---
+# Source: free5gc-n3iwf/templates/n3iwf-n2-nad.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: n2network-n3iwf
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "capabilities": { "ips": true },
+          "master": "eth0",
+          "mode": "bridge",
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "10.100.50.254"
+              }
+            ] 
+          }
+        }, {
+          "capabilities": { "mac": true },
+          "type": "tuning"
+        }
+      ]
+    }'
+---
+# Source: free5gc-n3iwf/templates/n3iwf-n3-nad.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: n3network-n3iwf
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "capabilities": { "ips": true },
+          "master": "eth0",
+          "mode": "bridge",
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "10.100.50.238"
+              }
+            ] 
+          }
+        }, {
+          "capabilities": { "mac": true },
+          "type": "tuning"
+        }
+      ]
+    }'
+
+NOTES:
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+# Visit the project at https://github.com/Orange-OpenSource/towards5gs-helm
+#

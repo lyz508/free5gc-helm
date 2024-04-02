@@ -1,0 +1,411 @@
+NAME: free5gc-amf
+LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+HOOKS:
+---
+# Source: free5gc-amf/templates/tests/test-connection.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "free5gc-amf-test-connection"
+  labels:
+    helm.sh/chart: free5gc-amf-0.2.7
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-amf
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: [':80']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: free5gc-amf/templates/amf-configmap.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI, Ian Chen
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: free5gc-amf-configmap
+  labels:
+    app: free5gc
+data:
+  amfcfg.yaml: |
+    info:
+      version: 1.0.9
+      description: AMF initial local configuration
+
+    configuration:
+      serviceNameList:
+        - namf-comm
+        - namf-evts
+        - namf-mt
+        - namf-loc
+        - namf-oam
+
+      ngapIpList:
+        - 10.100.50.249
+      ngapPort: 38412 # the SCTP port listened by NGAP
+      sbi:
+        scheme: http
+        registerIPv4: free5gc-amf-service # IP used to register to NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: 80
+        tls:
+          key: ../cert/amf.key
+          pem: ../cert/amf.pem
+
+      nrfUri: http://nrf-nnrf:8000
+      amfName: AMF
+      serviceNameList:
+        - namf-comm
+        - namf-evts
+        - namf-mt
+        - namf-loc
+        - namf-oam
+      servedGuamiList:
+        - plmnId:
+            mcc: 208
+            mnc: 93
+          amfId: cafe00
+      supportTaiList:
+        - plmnId:
+            mcc: 208
+            mnc: 93
+          tac: 000001
+      plmnSupportList:
+        - plmnId:
+            mcc: 208
+            mnc: 93
+          snssaiList:
+            - sst: 1
+              sd: 010203
+            - sst: 1
+              sd: 112233
+      supportDnnList:
+        - internet
+      security:
+        integrityOrder:
+          - NIA2
+        cipheringOrder:
+          - NEA0
+      networkName:
+        full: free5GC
+        short: free
+      ngapIE: # Optional NGAP IEs
+        mobilityRestrictionList: # Mobility Restriction List IE, refer to TS 38.413
+          enable: true # append this IE in related message or not
+        maskedIMEISV: # Masked IMEISV IE, refer to TS 38.413
+          enable: true # append this IE in related message or not
+        redirectionVoiceFallback: # Redirection Voice Fallback IE, refer to TS 38.413
+          enable: false # append this IE in related message or not
+      nasIE: # Optional NAS IEs
+        networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
+          enable: true # append this IE in Registration accept or not
+          length: 1 # IE content length (uinteger, range: 1~3)
+          imsVoPS: 0 # IMS voice over PS session indicator (uinteger, range: 0~1)
+          emc: 0 # Emergency service support indicator for 3GPP access (uinteger, range: 0~3)
+          emf: 0 # Emergency service fallback indicator for 3GPP access (uinteger, range: 0~3)
+          iwkN26: 0 # Interworking without N26 interface indicator (uinteger, range: 0~1)
+          mpsi: 0 # MPS indicator (uinteger, range: 0~1)
+          emcN3: 0 # Emergency service support indicator for Non-3GPP access (uinteger, range: 0~1)
+          mcsi: 0 # MCS indicator (uinteger, range: 0~1)
+      t3502Value: 720
+      t3512Value: 3600
+      non3gppDeregTimerValue: 3240
+      # retransmission timer for paging message
+      t3513:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      # retransmission timer for NAS Registration Accept message
+      t3522:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      # retransmission timer for NAS Registration Accept message
+      t3550:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      # retransmission timer for NAS Authentication Request/Security Mode Command message
+      t3560:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      # retransmission timer for NAS Notification message
+      t3565:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      t3570:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
+      sctp: # set the sctp server setting <optinal>, once this field is set, please also add maxInputStream, maxOsStream, maxAttempts, maxInitTimeOut
+        numOstreams: 3 # the maximum out streams of each sctp connection
+        maxInstreams: 5 # the maximum in streams of each sctp connection
+        maxAttempts: 2 # the maximum attempts of each sctp connection
+        maxInitTimeout: 2 # the maximum init timeout of each sctp connection
+      defaultUECtxReq: false # the default value of UE Context Request to decide when triggering Initial Context Setup procedure
+
+    logger:
+      enable: true
+      level: info
+      reportCaller: false
+---
+# Source: free5gc-amf/templates/amf-service.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-amf-service
+  labels:
+    helm.sh/chart: free5gc-amf-0.2.7
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-amf
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: amf
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-amf
+    project: free5gc
+    nf: amf
+---
+# Source: free5gc-amf/templates/amf-deployment.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-amf-amf
+  labels:
+    helm.sh/chart: free5gc-amf-0.2.7
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-amf
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: amf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-amf
+      app.kubernetes.io/instance: free5gc-amf
+      project: free5gc
+      nf: amf
+  template:
+    metadata:
+      annotations:
+        
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "n2network-free5gc-amf",
+              "interface": "n2",
+              "ips": [ "10.100.50.249/29" ],
+              "gateway": [ "10.100.50.254" ]
+            }]'
+        checksum/config: f5c2fa954129d0f1ce85018921f28e363b9fd437f80c56e4725cb9aca438654f
+      labels:
+        app.kubernetes.io/name: free5gc-amf
+        app.kubernetes.io/instance: free5gc-amf
+        project: free5gc
+        nf: amf
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-nrf
+        image: towards5gs/initcurl:1.0.0
+        env:
+        - name: DEPENDENCIES
+          value: http://nrf-nnrf:8000
+        command: ['sh', '-c', 'set -x; for dependency in $DEPENDENCIES; do while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" $dependency) -ne 200 ]; do echo waiting for dependencies; sleep 1; done; done;']
+
+      containers:
+      - name: amf
+        image: towards5gs/free5gc-amf:latest
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        ports:
+        - name: namf
+          containerPort: 80
+        - name: n2
+          containerPort: 38412
+          protocol: SCTP
+        command: ["./amf"]
+        args: ["-c", "../config/amfcfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: free5gc-amf-volume
+        resources:
+            requests:
+              cpu: 150m
+              memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: free5gc-amf-volume
+        projected:
+          sources:
+          - configMap:
+              name: free5gc-amf-configmap
+---
+# Source: free5gc-amf/templates/amf-hpa.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+---
+# Source: free5gc-amf/templates/amf-ingress.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+---
+# Source: free5gc-amf/templates/amf-n2-nad.yaml
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: n2network-free5gc-amf
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "ipvlan",
+          "capabilities": { "ips": true },
+          "master": "eth0",
+          "mode": "l2",
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "10.100.50.254"
+              }
+            ]
+          }
+        }
+      ]
+    }'
+
+NOTES:
+#
+# Software Name : towards5gs-helm
+# SPDX-FileCopyrightText: Copyright (c) 2021 Orange
+# SPDX-License-Identifier: Apache-2.0
+#
+# This software is distributed under the Apache License 2.0,
+# the text of which is available at https://github.com/Orange-OpenSource/towards5gs-helm/blob/main/LICENSE
+# or see the "LICENSE" file for more details.
+#
+# Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI
+# Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
+#
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=free5gc-amf,app.kubernetes.io/instance=free5gc-amf" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace default $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
