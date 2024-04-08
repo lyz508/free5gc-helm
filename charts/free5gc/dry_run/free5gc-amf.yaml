@@ -1,5 +1,5 @@
 NAME: free5gc-amf
-LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -85,6 +85,7 @@ data:
           pem: ../cert/amf.pem
 
       nrfUri: http://nrf-nnrf:8000
+      nrfCertPem: ../cert/nrf.pem # NRF Certificate
       amfName: AMF
       serviceNameList:
         - namf-comm
@@ -154,6 +155,11 @@ data:
         maxRetryTimes: 4 # the max number of retransmission
       # retransmission timer for NAS Registration Accept message
       t3550:
+        enable: true     # true or false
+        expireTime: 6s   # default is 6 seconds
+        maxRetryTimes: 4 # the max number of retransmission
+      # retransmission timer for NAS Configuration Update Command message
+      t3555:
         enable: true     # true or false
         expireTime: 6s   # default is 6 seconds
         maxRetryTimes: 4 # the max number of retransmission
@@ -265,7 +271,7 @@ spec:
               "ips": [ "10.100.50.249/29" ],
               "gateway": [ "10.100.50.254" ]
             }]'
-        checksum/config: f5c2fa954129d0f1ce85018921f28e363b9fd437f80c56e4725cb9aca438654f
+        checksum/config: 779d5f9acd6596813292f2287868daea0d06e2c2cdc6be00c17b88cfeaf528f8
       labels:
         app.kubernetes.io/name: free5gc-amf
         app.kubernetes.io/instance: free5gc-amf

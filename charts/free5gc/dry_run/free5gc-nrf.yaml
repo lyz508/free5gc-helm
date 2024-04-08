@@ -1,5 +1,5 @@
 NAME: free5gc-nrf
-LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -94,6 +94,7 @@ data:
         cert:
           key: ../cert/nrf.key
           pem: ../cert/nrf.pem
+        oauth: true
       DefaultPlmnId:
         mcc: 208
         mnc: 93
@@ -202,7 +203,7 @@ spec:
     metadata:
       annotations:
         
-        checksum/config: 04bcd381919e973f65c743ad70382f8536774c77eb0aecbec132ebb6d8209234
+        checksum/config: 7c6428ea76702faf23923bf0f53f9bd3ae09c3992e9c0ed270c12cc7cd1df38d
       labels:
         app.kubernetes.io/name: free5gc-nrf
         app.kubernetes.io/instance: free5gc-nrf

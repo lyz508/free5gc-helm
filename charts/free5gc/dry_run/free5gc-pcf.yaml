@@ -1,5 +1,5 @@
 NAME: free5gc-pcf
-LAST DEPLOYED: Tue Apr  2 15:48:13 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -89,6 +89,7 @@ data:
         url: mongodb://mongodb:27017 # a valid URL of the mongodb
 
       nrfUri: http://nrf-nnrf:8000
+      nrfCertPem: ../cert/nrf.pem # NRF Certificate
       pcfName: PCF
       timeFormat: 2019-01-02 15:04:05
       defaultBdtRefId: BdtPolicyId-
@@ -174,7 +175,7 @@ spec:
     metadata:
       annotations:
         
-        checksum/config: 61dc3d31b7bb6c82826a1892f25e0996dbf33e3d5bac231c03e9b0b5c8e0fea0
+        checksum/config: 33d4673fe326850cc9d3e6055aedde76a7459871afeb091c3d9603b2aff0cf93
       labels:
         app.kubernetes.io/name: free5gc-pcf
         app.kubernetes.io/instance: free5gc-pcf

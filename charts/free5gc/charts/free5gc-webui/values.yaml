@@ -25,6 +25,18 @@ global:
       type: ClusterIP
       port: "8000"
       nodePort: "30800"
+  webui: 
+    service:
+      name: webui-nbiling
+      type: NodePort
+      port: "2122"
+      nodePort: "32122"
+  cgf:
+    service:
+      name: webui-ncgf
+      type: NodePort
+      port: "2121"
+      nodePort: "32121"
   sbi:
     scheme: http
 

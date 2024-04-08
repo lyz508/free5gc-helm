@@ -1,5 +1,5 @@
 NAME: free5gc-webui
-LAST DEPLOYED: Tue Apr  2 15:48:13 2024
+LAST DEPLOYED: Mon Apr  8 14:55:18 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -61,14 +61,27 @@ metadata:
 data:
   webuicfg.yaml: |
     info:
-      version: 1.0.1
+      version: 1.0.2
       description: WEBUI initial local configuration
 
     configuration:
       mongodb:
         name: free5gc
         url: mongodb://mongodb:27017
-        
+      nrfUri: http://nrf-nnrf:8000
+      webServer:
+        scheme: http
+        ipv4Address: 0.0.0.0
+        port: 5000
+      billingServer:
+        enable: true
+        hostIPv4: webui-nbiling
+        listenPort: 2122
+        port: 2121
+        tls:
+          pem: ../cert/chf.pem
+          key: ../cert/chf.key
+
     logger:
       enable: true
       level: info
@@ -105,6 +118,60 @@ spec:
     - port: 5000
       targetPort: 5000
       nodePort: 30500
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    project: free5gc
+    nf: webui
+---
+# Source: free5gc-webui/templates/webui-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui-nbiling
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.5
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: webui
+spec:
+  type: NodePort
+  ports:
+    - port: 2122
+      targetPort: 2122
+      nodePort: 32122
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    project: free5gc
+    nf: webui
+---
+# Source: free5gc-webui/templates/webui-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui-ncgf
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.5
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-webui
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: webui
+spec:
+  type: NodePort
+  ports:
+    - port: 2121
+      targetPort: 2121
+      nodePort: 32121
       protocol: TCP
       name: http
   selector:
@@ -150,7 +217,7 @@ spec:
     metadata:
       annotations:
         
-        checksum/config: dca9ce1ce322857c13ff22eb20730f2486447fea355551590f1805fa2d3774e3    
+        checksum/config: 02627ac80a5b8afe70def29171c6e5f6e13140c055da1a9e2fde60a270144d1e    
       labels:
         app.kubernetes.io/name: free5gc-webui
         app.kubernetes.io/instance: free5gc-webui

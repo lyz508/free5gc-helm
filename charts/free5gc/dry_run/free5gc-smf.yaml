@@ -1,5 +1,5 @@
 NAME: free5gc-smf
-LAST DEPLOYED: Tue Apr  2 15:48:13 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -80,6 +80,10 @@ data:
           pem: ../cert/smf.pem
 
       nrfUri: http://nrf-nnrf:8000
+      nrfCertPem: ../cert/nrf.pem # NRF Certificate
+      urrPeriod: 10 # default usage report period in seconds
+      urrThreshold: 1000 # default usage report threshold in bytes
+      requestedUnit: 1000
 
       pfcp:
         nodeID: 10.100.50.244
@@ -153,13 +157,13 @@ data:
       locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
       
       t3591:
-        enable: true     # true or false
-        expireTime: 16s   # default is 6 seconds
+        enable: true # true or false
+        expireTime: 16s # default is 6 seconds
         maxRetryTimes: 3 # the max number of retransmission
       # retransmission timer for pdu session release command
       t3592:
-        enable: true     # true or false
-        expireTime: 16s   # default is 6 seconds
+        enable: true # true or false
+        expireTime: 16s # default is 6 seconds
         maxRetryTimes: 3 # the max number of retransmission
 
     logger:
@@ -286,7 +290,7 @@ spec:
               "ips": [ "10.100.50.244/29" ],
               "gateway": [ "10.100.50.246" ]
             }]'
-        checksum/config: 9cbcf525e252c70d8975dc62e2fa8813aacbdd9e37c4443265d242ff38d1e1fd
+        checksum/config: 6c2c4f9b0bdded3fd620087f15ae2ac29ba0707dc62196abebc27b89a896e59e
       labels:
         app.kubernetes.io/name: free5gc-smf
         app.kubernetes.io/instance: free5gc-smf

@@ -1,5 +1,5 @@
 NAME: free5gc-udm
-LAST DEPLOYED: Tue Apr  2 15:48:13 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -82,6 +82,7 @@ data:
           pem: ../cert/udm.pem
 
       nrfUri: http://nrf-nnrf:8000
+      nrfCertPem: ../cert/nrf.pem # NRF Certificate
       # test data set from TS33501-f60 Annex C.4
       SuciProfile:
         - ProtectionScheme: 1 # Protect Scheme: Profile A
@@ -171,7 +172,7 @@ spec:
     metadata:
       annotations:
         
-        checksum/config: 1189b9f2e0fafbb6421d3674f61283c2d627129bd36710a623676ee9a66ce5f6
+        checksum/config: c9561328e5981ad0406960f9dd7a011eb0a3c068d37931aa2b668a81aed35ccb
       labels:
         app.kubernetes.io/name: free5gc-udm
         app.kubernetes.io/instance: free5gc-udm

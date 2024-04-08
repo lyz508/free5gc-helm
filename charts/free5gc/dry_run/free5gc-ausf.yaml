@@ -1,5 +1,5 @@
 NAME: free5gc-ausf
-LAST DEPLOYED: Tue Apr  2 15:48:12 2024
+LAST DEPLOYED: Mon Apr  8 14:55:17 2024
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -78,6 +78,7 @@ data:
           pem: ../cert/ausf.pem
 
       nrfUri: http://nrf-nnrf:8000
+      nrfCertPem: ../cert/nrf.pem # NRF Certificate
       plmnSupportList:
         - mcc: 208
           mnc: 93
@@ -166,7 +167,7 @@ spec:
     metadata:
       annotations:
         
-        checksum/config: 50e7b7082469be1f9eaea9e8f709a54bfa3195d0e68b12100dce2bd8ae773898
+        checksum/config: cb1b7e45b4bee45e7da5dd2102a64aedd29c4fc7016f76fecc92b9c4652b1f3e
       labels:
         app.kubernetes.io/name: free5gc-ausf
         app.kubernetes.io/instance: free5gc-ausf
