@@ -46,8 +46,11 @@ spec:
         - name: {{ .name }}
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
-          image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
-          imagePullPolicy: {{ .image.pullPolicy }}
+          # image: {{ .image.name }}:{{ .image.tag | default $.Chart.AppVersion }}
+          # imagePullPolicy: {{ .image.pullPolicy }}
+          # tmp to local image
+          image: localhost:32000/free5gc-chf:v3.4.1
+          imagePullPolicy: Always
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
           ports:

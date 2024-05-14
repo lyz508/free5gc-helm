@@ -1,5 +1,5 @@
 #FROM bitnami/golang:1.14.4 AS builder
-FROM golang:1.21.4-buster AS builder
+FROM golang:1.21.10-bullseye AS builder
 
 ARG NF FREE5GC_VER
 
@@ -12,8 +12,10 @@ WORKDIR $GOPATH/src
 RUN git clone -b ${FREE5GC_VER} -j `nproc` https://github.com/free5gc/free5gc.git && \
     cd free5gc && \
     git submodule update --init NFs/${NF}
- 
-# Build AMF
+
+RUN if [ "$NF" = "chf" ] ; then sed -i 's/RegisterIPv4/BindingIPv4/g' $GOPATH/src/free5gc/NFs/chf/internal/cgf/cgf.go ; fi
+
+# Build NF
 WORKDIR $GOPATH/src/free5gc
 RUN make ${NF}
 
@@ -29,11 +31,14 @@ WORKDIR /free5gc
 RUN mkdir -p config/ cert/ public
 
 # Copy executables
-COPY --from=builder /go/src/free5gc/bin/${NF} ./${NF}/
+COPY --from=builder /go/src/free5gc/bin/${NF} ./
+
+# for check
+COPY --from=builder /go/src/free5gc/NFs/chf/internal/cgf/cgf.go ./
 
 # Copy certificates and config files
 COPY --from=builder /go/src/free5gc/config/${NF}cfg.yaml ./config/
 COPY --from=builder /go/src/free5gc/cert/${NF}* ./cert/
 
-WORKDIR /free5gc/${NF}
+WORKDIR /free5gc/
 
